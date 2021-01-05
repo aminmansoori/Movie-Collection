@@ -1,114 +1,107 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-} from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import CategoryMovieScreen from './src/screens/CategoryMovieScreen';
+import CategoryListScreen from './src/screens/CategoryListScreen';
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import MoviesScreen from './src/screens/MoviesScreen';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider, useSelector } from 'react-redux';
+import LogInScreen from './src/screens/LogInScreen';
+import Reducers from './src/containers/reducers/Index';
+import HomeScreen from './src/screens/HomeScreen';
+import SplashScreen from './src/screens/Splash';
+import { Icon } from 'react-native-elements';
+import { Dimensions } from 'react-native';
+import ReduxThunk from 'redux-thunk';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const wp = Dimensions.get("window").width;
+const hp = Dimensions.get("window").height;
+const fontSize = wp * 0.04
 
-const App: () => React$Node = () => {
+const Tab = createBottomTabNavigator();
+function TabScreens() {
   return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          switch (route.name) {
+            case 'Home': {
+              iconName = "home";
+              color = focused ? "red" : color;
+              break;
+            }
+            case 'CategoryList':
+              {
+                iconName = "list";
+                color = focused ? "red" : color;
+                break;
+              }
+            case 'CategoryMovie':
+              {
+                iconName = "movie";
+                color = focused ? "red" : color;
+                break;
+              }
+          }
+          return <Icon name={iconName} size={25} color={color} />;
+        },
+      })}
+      tabBarOptions={{
+        activeTintColor: "red",
+        labelStyle: { fontSize: fontSize },
+        keyboardHidesTabBar: true,
+        labelPosition: 'below-icon',
+      }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} initialRouteName="Home" />
+      <Tab.Screen name="CategoryList" component={CategoryListScreen} />
+      <Tab.Screen name="CategoryMovie" component={CatgoryFlowStackScreens} />
+    </Tab.Navigator>
   );
-};
+}
 
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});
+const CatgoryFlowStack = createStackNavigator();
+function CatgoryFlowStackScreens() {
+  return (
+    <CatgoryFlowStack.Navigator>
+      <CatgoryFlowStack.Screen name="Category" component={CategoryMovieScreen} options={{ headerShown: false }} />
+      <CatgoryFlowStack.Screen name="Movies" component={MoviesScreen} options={{ headerShown: true }} />
+    </CatgoryFlowStack.Navigator>
+  )
+}
 
-export default App;
+const Stack = createStackNavigator();
+
+function MyStacK() {
+  const userToken = useSelector(State => State.AuthReducer.token);
+  const isLoading = useSelector(State => State.AuthReducer.loading);
+  console.log('isloading: ', isLoading);
+
+  if (isLoading) {
+    return <SplashScreen />
+  }
+
+  return (
+    <Stack.Navigator>
+      {userToken == '' ?
+        <Stack.Screen name="LogIn" component={LogInScreen} options={{ headerShown: false }} />
+        :
+        <Stack.Screen name="TabScreens" component={TabScreens} options={{ headerShown: false }} />
+      }
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  const store = createStore(Reducers, {}, applyMiddleware(ReduxThunk))
+
+  return (
+    <NavigationContainer>
+      <Provider store={store}>
+        <MyStacK />
+      </Provider>
+    </NavigationContainer>
+  );
+}
